@@ -35,7 +35,7 @@
   )
 )
 
-(defn count-neighbors [cell]
+(defn enumerate-neighbors [cell]
   (for [x (range -1 2) 
         y (range -1 2)
         :when (not (and (= x 0) (= y 0)))] 
@@ -43,10 +43,10 @@
   )
 )
 
-(defn should-live? [current coord num-living-neighbors]
+(defn should-live? [living-cells coord num-living-neighbors]
   (or
     (= num-living-neighbors 3)
-    (and (= num-living-neighbors 2) (contains? current (Cell. (first coord) (second coord))))
+    (and (= num-living-neighbors 2) (contains? living-cells (Cell. (first coord) (second coord))))
   )
 )
 
@@ -59,35 +59,32 @@
   )
 )
 
-(defn next-generation [current rows cols]
+(defn next-generation "Compute the next generation from the current one. Limits range to (0,0) to (cols,rows)." [current rows cols]
   (set (map 
     #(Cell. (first (first %)) (second (first %)))
     (filter 
       #(should-live? current (first %) (second %))
       (filter 
-        ; #(do (println (first %) (in-bounds? (first %) rows cols)))
         #(in-bounds? (first %) rows cols)
         (frequencies
-          (apply concat (map count-neighbors current))
+          (apply concat (map enumerate-neighbors current))
         )
       )
     )
   ))
 )
 
-
-
-; ; blinker
-; (def initial-state (str/join "\n" [
-; "     "
-; "  #  "
-; "  #  "
-; "  #  "
-; "     "
-; ]))
+; blinker
+(def blinker (str/join "\n" [
+"     "
+"  #  "
+"  #  "
+"  #  "
+"     "
+]))
 
 ; glider
-(def initial-state (str/join "\n" [
+(def glider (str/join "\n" [
 " #   "
 "  #  "
 "###  "
@@ -96,7 +93,7 @@
 ]))
 
 ; pulsar
-(def initial-state (str/join "\n" [
+(def pulsar (str/join "\n" [
 "                 "
 "                 "
 "    ###   ###    "
@@ -114,11 +111,11 @@
 "    ###   ###    "
 "                 "
 "                 "
-"                 "
-
-
 ]))
 
+(def initial-state pulsar)
+
+; count rows and columns from input
 (def rows (inc (count (filter 
   #(= \newline %) 
   initial-state)
@@ -129,7 +126,7 @@
   )
 ))
 
-
+; main loop
 (loop [cur-gen (parse-living initial-state) i 0]
   (print-grid cur-gen rows cols)
   (println (apply str (repeat 10 "-")))
