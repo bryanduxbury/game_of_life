@@ -35,7 +35,7 @@
     ; filter for hashmarks (living)
     (filter #(= \# (get % 2)))
     ; make Cells
-    (map #(Cell. (first %) (second %)))
+    (map #(->Cell (first %) (second %)))
     ; make set
     (set)))
     
