@@ -14,34 +14,35 @@
   )
 )
 
+(defn render-row [cells row cols]
+  (->> 
+    (for [col (range cols)] (if (contains? cells (Cell. col row)) "#" "."))
+    (apply str)
+    (str)))
+
 (defn print-grid [living-cells rows cols]
-  (print (str (apply str (for [y (range rows)] (render-row living-cells y cols)))  "\n"))
-)
+  (->> (for [y (range rows)] 
+    (->> (render-row living-cells y cols)
+      str))
+    (str/join "\n")
+    println))
 
 (defn parse-living [s]
-  (set 
-    (map 
-      #(Cell. (first %) (second %))
-      (filter
-        #(= \# (get % 2))
-        (apply concat
-          (for [[row row-elt]
-            (map-indexed vector (str/split-lines s))]
-            (map #(vector (first %) row (second %)) (map-indexed vector row-elt))
-          )
-        )
-      )
+  (->> 
+    (for [[row row-elt]
+      (map-indexed vector (str/split-lines s))]
+      (map #(vector (first %) row (second %)) (map-indexed vector row-elt))
     )
-  )
-)
+    (apply concat)
+    (filter #(= \# (get % 2)))
+    (map #(Cell. (first %) (second %)))
+    (set)))
 
 (defn enumerate-neighbors [cell]
   (for [x (range -1 2) 
         y (range -1 2)
-        :when (not (and (= x 0) (= y 0)))] 
-    [(+ (:x cell) x) (+ (:y cell) y)]
-  )
-)
+        :when (not (and (= x 0) (= y 0)))]
+    [(+ (:x cell) x) (+ (:y cell) y)]))
 
 (defn should-live? [living-cells coord num-living-neighbors]
   (or
