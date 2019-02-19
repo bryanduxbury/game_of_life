@@ -1,18 +1,10 @@
 (require '[clojure.string :as str])
 (require '[clojure.set :as set])
 
-(defrecord Cell [x y])
+(defn println-passthrough [s] (do (println (pr-str (doall s))) s))
 
-(defn render-row [cells row cols]
-  (str
-    (apply str
-      (for [col (range cols)] 
-        (if (contains? cells (Cell. col row)) "#" ".")
-      )
-    )
-    "\n"
-  )
-)
+
+(defrecord Cell [x y])
 
 (defn render-row [cells row cols]
   (->> 
@@ -21,22 +13,32 @@
     (str)))
 
 (defn print-grid [living-cells rows cols]
-  (->> (for [y (range rows)] 
-    (->> (render-row living-cells y cols)
-      str))
+  (->> (range rows)
+    (map #(render-row living-cells % cols))
     (str/join "\n")
     println))
 
+(defn map-indexed-with-row [rownum rowval]
+  (map-indexed #(vector rownum %1 %2) rowval)
+)
+
 (defn parse-living [s]
   (->> 
-    (for [[row row-elt]
-      (map-indexed vector (str/split-lines s))]
-      (map #(vector (first %) row (second %)) (map-indexed vector row-elt))
-    )
+    ; split into lines
+    (str/split-lines s)
+    ; get map [row, line]
+    (map-indexed vector)
+    ; get map [row, col, char]
+    (map #(map-indexed-with-row (get % 0) (get % 1)))
+    ; concat all together
     (apply concat)
+    ; filter for hashmarks (living)
     (filter #(= \# (get % 2)))
+    ; make Cells
     (map #(Cell. (first %) (second %)))
+    ; make set
     (set)))
+    
 
 (defn enumerate-neighbors [cell]
   (for [x (range -1 2) 
