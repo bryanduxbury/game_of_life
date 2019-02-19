@@ -61,19 +61,13 @@
 )
 
 (defn next-generation "Compute the next generation from the current one. Limits range to (0,0) to (cols,rows)." [current rows cols]
-  (set (map 
-    #(Cell. (first (first %)) (second (first %)))
-    (filter 
-      #(should-live? current (first %) (second %))
-      (filter 
-        #(in-bounds? (first %) rows cols)
-        (frequencies
-          (apply concat (map enumerate-neighbors current))
-        )
-      )
-    )
-  ))
-)
+  (->> (map enumerate-neighbors current)
+    (apply concat)
+    frequencies
+    (filter #(in-bounds? (first %) rows cols))
+    (filter #(should-live? current (first %) (second %)))
+    (map #(->Cell (first (first %)) (second (first %))))
+    set))
 
 ; blinker
 (def blinker (str/join "\n" [
